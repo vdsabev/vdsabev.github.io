@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Writing Reliable Unit Tests for Our Components</title>
+		<meta name="description" content="Three common pitfalls when writing Vue component unit tests and how to write more reliable tests that focus on the component's public interface." />
+		<meta property="og:url" content="https://vdsabev.github.io/writing-reliable-unit-tests-for-our-components/" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content="Writing Reliable Unit Tests for Our Components" />
+		<meta property="og:description" content="Three common pitfalls when writing Vue component unit tests and how to write more reliable tests that focus on the component's public interface." />
+		<meta property="og:image" content="/writing-reliable-unit-tests-for-our-components/0_kCh083T6C-HaDtTB.webp" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content="https://vdsabev.github.io/writing-reliable-unit-tests-for-our-components/" />
+		<meta name="twitter:title" content="Writing Reliable Unit Tests for Our Components" />
+		<meta name="twitter:description" content="Three common pitfalls when writing Vue component unit tests and how to write more reliable tests that focus on the component's public interface." />
+		<meta name="twitter:image" content="/writing-reliable-unit-tests-for-our-components/0_kCh083T6C-HaDtTB.webp" />
+		<link rel="stylesheet" href="https://unpkg.com/missing.css@1.2.0">
+		<link rel="stylesheet" href="https://unpkg.com/missing.css@1.2.0/dist/missing-prism.min.css">
+		
+	<style>
+	  :root {
+		color-scheme: light;
+		--bg: #fafafa;
+		--fg: #1a1a1a;
+		--box-bg: #f0f0f0;
+		--interactive-bg: #e0e0e0;
+		--accent: #0066cc;
+		--link-fg: #0066cc;
+		--muted-fg: #6c7280;
+	  }
+
+	  nav li + li {
+		margin-top: 0.5rem;
+	  }
+
+	  /* Force dark theme for code blocks regardless of page theme */
+	  pre, code {
+		--bad-fg: #f97583;
+		--ok-fg: #9ecbff;
+		--warn-fg: #ffab70;
+		--info-fg: #79c0ff;
+	  }
+	  
+	  pre {
+		background: #1e1e1e !important;
+		color: #e1e4e8 !important;
+		border-radius: 6px;
+		padding: 1em;
+	  }
+
+	  code {
+		background: #1e1e1e !important;
+		color: #e1e4e8 !important;
+		padding: 0.2em 0.4em;
+		border-radius: 3px;
+	  }
+
+	  pre code {
+		background: transparent !important;
+		padding: 0;
+	  }
+	</style>
+	
+	</head>
+	<body>
+		<div style="max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; display: flex; gap: 2rem;">
+			<aside style="flex: 0 0 250px; position: sticky; top: 2rem; height: fit-content;">
+				<nav><h3>Posts</h3><ul><li><a href="/the-ai-casino/">2026-02-17 The AI Casino</a></li><li><a href="/the-spiritual-cost-of-the-nanny-state/">2026-02-07 The Spiritual Cost of the Nanny State</a></li><li><a href="/overtherapizing-men-s-mental-health/">2026-02-02 Overtherapizing Men's Mental Health</a></li><li><a href="/storytelling-with-ai-world-models/">2026-02-02 Storytelling with AI World Models</a></li><li><strong><a href="/writing-reliable-unit-tests-for-our-components/">2020-11-08 Writing Reliable Unit Tests for Our Components</a></strong></li></ul></nav>
+			</aside>
+			<main style="flex: 1; min-width: 0;">
+				<h1>Writing Reliable Unit Tests for Our Components</h1>
+				<p><img alt="Photo by Clem Onojeghuo on Unsplash" src="./0_kCh083T6C-HaDtTB.webp" /></p>
+<p>Have you been painstakingly cranking out unit tests for the past few months, trying to hit and maintain the coveted &gt; 90% code coverage, only to now find yourself rewriting them again and again because of minor changes to your codebase?</p>
+<p>Have your users bumped into subtle bugs that your unit tests just weren&rsquo;t able to catch, even though your component code is supposedly 100% covered?</p>
+<p>Have your QA engineers been constantly asking you to add more selectors to elements in your components so that they are able to do their job and write automated tests?</p>
+<p>In this post we&rsquo;ll be going over these 3 pain points that many have experienced because of the way we sometimes write component unit tests, and then we&rsquo;ll explore an alternative approach that addresses them.</p>
+<h2>📦 What are we testing?</h2>
+<p>For starters, let&rsquo;s take a simple Counter component implemented in Vue:</p>
+<pre><code class="language-html">&lt;template&gt;
+  &lt;div&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;decrement(step)&quot;&gt;-&lt;/button&gt;
+    &lt;input type=&quot;text&quot; :value=&quot;value&quot; @input=&quot;setValue($event.target.value)&quot; /&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;increment(step)&quot;&gt;+&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+  name: 'Counter',
+  props: {
+    value: {
+      default: 0,
+      type: Number
+    },
+    step: {
+      default: 1,
+      type: Number
+    }
+  },
+  methods: {
+    setValue(value) {
+      this.$emit('input', parseFloat(value));
+    },
+    increment(step) {
+      this.setValue(this.value + step);
+    },
+    decrement(step) {
+      this.setValue(this.value - step);
+    },
+  },
+};
+&lt;/script&gt;
+</code></pre>
+<p><em>Source: <a href="https://gist.github.com/vdsabev/b582e1f8bd1f17b07e5b36a8fd0700dd">gist.github.com/vdsabev/b582e1f8bd1f17b07e5b36a8fd0700dd</a></em></p>
+<p>Here&rsquo;s what it looks like:</p>
+<p><img alt="Counter component UI" src="./1_w9rEa-_EUOi8xRa6ainJeg.gif" /></p>
+<p>Now let&rsquo;s write some unit tests using <a href="http://vue-test-utils.vuejs.org">Vue Test Utils</a>:</p>
+<pre><code class="language-javascript">import { mount } from '@vue/test-utils';
+import Counter from './Counter';
+
+describe('Counter', () =&gt; {
+  let component;
+  beforeEach(() =&gt; {
+    component = mount(Counter);
+  });
+
+  it('should emit value set to a specific number', () =&gt; {
+    component.vm.setValue(5);
+    expect(component.emitted('input')).toEqual([[5]]);
+  });
+
+  it('should emit value incremented by step', () =&gt; {
+    component.vm.increment(10);
+    expect(component.emitted('input')).toEqual([[10]]);
+  });
+
+  it('should emit value decremented by step', () =&gt; {
+    component.vm.decrement(10);
+    expect(component.emitted('input')).toEqual([[-10]]);
+  });
+});
+</code></pre>
+<p><em>Source: <a href="https://gist.github.com/vdsabev/ec4a749d8bed879a5933a6ac91322302">gist.github.com/vdsabev/ec4a749d8bed879a5933a6ac91322302</a></em></p>
+<p>We&rsquo;ve tested each method that our component can call, and since there isn&rsquo;t much code in there it&rsquo;s relatively easy to cover all of it:</p>
+<p><img alt="100% code coverage" src="./1_yfu7uedZba9C-71V0uFVSQ.webp" /></p>
+<p>But is that really enough?</p>
+<h2>🤨 What&rsquo;s wrong with these tests?</h2>
+<p>Maybe nothing — at first glance they may look like perfectly acceptable tests.</p>
+<p><img alt="Tests passing" src="./0_4sD4zJ_20ipib3rn.webp" /></p>
+<p>After all they do give us 100% code coverage, that means we should be good, right?</p>
+<p>Let&rsquo;s see if we can agree on 3 properties of reliable component tests:</p>
+<ol>
+<li><strong>When tests pass, the component works; when the component works, the tests pass.</strong> This gives us confidence to refactor our code.</li>
+<li><strong>When tests fail, the component doesn&rsquo;t work; when the component doesn&rsquo;t work, the tests fail.</strong> This gives us easier debugging since failing tests pinpoint <em>where</em> in the code we should be looking for a bug.</li>
+<li><strong>Writing tests encourages better engineering practices for our components and makes them easier to test by anyone,</strong> not just people intimately familiar with the internals. This gives us scale across the entire team, including QA and even 3rd party consumers of our components.</li>
+</ol>
+<p>Now let&rsquo;s see where the tests we have right now fall short.</p>
+<h3>1️⃣ Refactoring makes them fail even though our component still works</h3>
+<p>One of the benefits of having reliable unit tests is they help us refactor fearlessly. You might have noticed we pass the <code>step</code> prop when calling <code>increment</code> and <code>decrement</code> in the template when instead we could just access the prop in the method using <code>this.step</code> and clean up our template a little bit. Let&rsquo;s make that small change:</p>
+<pre><code class="language-html">&lt;template&gt;
+  &lt;div&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;decrement&quot;&gt;-&lt;/button&gt; &lt;!-- we removed the argument here --&gt;
+    &lt;input type=&quot;text&quot; :value=&quot;value&quot; @input=&quot;setValue($event.target.value)&quot; /&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;increment&quot;&gt;+&lt;/button&gt; &lt;!-- we removed the argument here --&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+  ...
+  methods: {
+    ...
+    increment() {
+      this.setValue(this.value + this.step);
+    },
+    decrement() {
+      this.setValue(this.value - this.step);
+    },
+  },
+};
+&lt;/script&gt;
+</code></pre>
+<p><em>Source: <a href="https://gist.github.com/vdsabev/49a247afadba4d9a16e637fef6052f05">gist.github.com/vdsabev/49a247afadba4d9a16e637fef6052f05</a></em></p>
+<p>This is just some internal refactoring, the Counter component still works, but what happens to our tests?</p>
+<p>They break right away, because we were previously passing 10 to the method and since it no longer accepts an argument it uses the default value of the <code>step</code> prop which is 1!</p>
+<p><img alt="Tests failing after refactor" src="./1_PVOFpT0cJds5r4vzMeDvSA.webp" /></p>
+<p>Right about now you may be shaking your head saying — &ldquo;of course they would break, what did you expect, it&rsquo;s obvious?!&rdquo;</p>
+<p>Well, I expect that when my component works the exact same way as before for an end user my tests will also pass without having to change them. Think about that for a moment — does testing components like this make it <em>easier</em> to refactor them or <em>more difficult</em>? Does it <em>remove</em> obstacles or does it <em>add more</em>?</p>
+<p>Now we have to rewrite those failing tests. Here&rsquo;s what it would take to fix them:</p>
+<pre><code class="language-javascript">describe('Counter', () =&gt; {
+  ...
+
+  it('should emit value incremented by step', async () =&gt; {
+    await component.setProps({ step: 10 });
+    component.vm.increment();
+    expect(component.emitted('input')).toEqual([[10]]);
+  });
+
+  it('should emit value decremented by step', async () =&gt; {
+    await component.setProps({ step: 10 });
+    component.vm.decrement();
+    expect(component.emitted('input')).toEqual([[-10]]);
+  });
+});
+</code></pre>
+<p><em>Source: <a href="https://gist.github.com/vdsabev/8ba14410866b724d9e6f475e5f2e234a">gist.github.com/vdsabev/8ba14410866b724d9e6f475e5f2e234a</a></em></p>
+<p>We have to set the <code>step</code> prop beforehand and we&rsquo;re good to go for now.</p>
+<h3>2️⃣ Changing the template doesn&rsquo;t make them fail even though the component no longer works</h3>
+<p>Remember when we removed that pesky <code>step</code> prop from the template? That cleaned it up a little bit, but we&rsquo;re still passing an argument to <code>setValue</code> in there. So let&rsquo;s clean that up as well:</p>
+<pre><code class="language-html">&lt;template&gt;
+  &lt;div&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;decrement&quot;&gt;-&lt;/button&gt;
+    &lt;input type=&quot;text&quot; :value=&quot;value&quot; @input=&quot;setValue&quot; /&gt; &lt;!-- we removed the argument here --&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;increment&quot;&gt;+&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+</code></pre>
+<p><em>Source: <a href="https://gist.github.com/vdsabev/95085ea56314a65b04b5332d7980ba0f">gist.github.com/vdsabev/95085ea56314a65b04b5332d7980ba0f</a></em></p>
+<p>Ah, looks much better, and our tests are still green!</p>
+<p><img alt="100% code coverage" src="./1_yfu7uedZba9C-71V0uFVSQ.webp" /></p>
+<p>Wait, what happened to our component?</p>
+<p><img alt="Broken component" src="./1_1LB77sLdFL5UoK1MxMvOyQ.gif" /></p>
+<p>We just deleted the argument from <code>setValue</code> which was sending the input element&rsquo;s value — and now typing in the input no longer works because it calls <code>setValue</code> with <code>$event</code> instead of <code>$event.target.value</code></p>
+<p>And our tests, with their glorious 100% of code coverage, did exactly nothing to protect us from that.</p>
+<p>You may think you&rsquo;re a careful and experienced developer and would <em>never</em> make a silly mistake like that. But let me ask you this — are you the only person working on this project — now and forever?</p>
+<p>Besides, mistakes don&rsquo;t happen solely due to inexperience — people get tired because of long working hours, distracted by children or pets, or stressed out when an important deadline looms close.</p>
+<p><em>(I also sincerely hope you don&rsquo;t drive with</em> <strong><em>no</em></strong> <em>seatbelt on just because you think you&rsquo;re a careful and experienced driver)</em></p>
+<h3>3️⃣ They don&rsquo;t help us make the component easier to test from the outside</h3>
+<p>How would a QA engineer write an automated script that tests this component in the UI? Maybe query for the buttons with JavaScript like this:</p>
+<pre><code class="language-javascript">const decrementButton = document.querySelectorAll('button')[0];
+const incrementButton = document.querySelectorAll('button')[1];
+</code></pre>
+<p>This works for now, but what if we put out a new design that switches the order of the DOM nodes and renders them vertically like in the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/number">HTML number input</a>?</p>
+<p>Alternatively, a QA engineer could select the buttons by their text content <code>-</code> or <code>+</code> which is a viable approach but also has trade-offs — for example it would break if we replaced the text content with equivalent icons.</p>
+<p>Classes also work but could be inadvertently removed by a developer who doesn&rsquo;t know they&rsquo;re used for testing.</p>
+<p>And so in this specific case I prefer <a href="https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Techniques/Using_the_aria-label_attribute"><code>aria-label</code></a>:</p>
+<pre><code class="language-html">&lt;template&gt;
+  &lt;div&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;decrement&quot; aria-label=&quot;Decrement&quot;&gt;-&lt;/button&gt;
+    &lt;input type=&quot;text&quot; :value=&quot;value&quot; @input=&quot;setValue($event.target.value)&quot; /&gt;
+    &lt;button type=&quot;button&quot; @click=&quot;increment&quot; aria-label=&quot;Increment&quot;&gt;+&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+</code></pre>
+<p><em>Source: <a href="https://gist.github.com/vdsabev/3fd65aef13dad153d5c3a90562bc7397">gist.github.com/vdsabev/3fd65aef13dad153d5c3a90562bc7397</a></em></p>
+<p>It&rsquo;s explicit, meaningful, and yes it does happen to make our component more accessible to users with special needs, but more importantly in this case — to our QA engineers.</p>
+<p>However, no matter which approach to selecting elements we take, the component tests we have right now leave the QA team as an afterthought. We&rsquo;re likely to only add the selectors when we&rsquo;re asked to do so by someone else trying to test our component from the outside (and failing miserably).</p>
+<p>In summary, there&rsquo;s an ancient Zen saying that describes our predicament succinctly:</p>
+<blockquote>
+<p><strong><em>💭</em> Checking whether a component behaves correctly by testing its internals is like judging a tapestry by looking at its back side.</strong></p>
+</blockquote>
+<p><img alt="Embroidery front and back side" src="./1_fwJDasLTH6ElHIJaKtIl9Q.webp" />
+<small style="display: block; text-align: center">Yes, I know that&rsquo;s embroidery 🤓</small></p>
+<h2>🤔 What&rsquo;s a reliable test supposed to do?</h2>
+<p>As long as a component looks and behaves the same, unit tests should leave us free to rework our code so we can make it easier to maintain. Also, code that affects component behavior should be tested, even if it doesn&rsquo;t get captured in a coverage report. Finally, components should be accessible for testing from the outside.</p>
+<p>So how do we actually do that?</p>
+<pre><code class="language-javascript">import { mount } from '@vue/test-utils';
+import Counter from './Counter';
+
+describe('Counter', () =&gt; {
+  let component;
+  beforeEach(() =&gt; {
+    component = mount(Counter);
+  });
+
+  it('should emit value set to a specific number', async () =&gt; {
+    const input = component.find('input'); // find the input
+    input.element.value = '5';             // set the input value
+    await input.trigger('input');          // trigger an `input` event
+    expect(component.emitted('input')).toEqual([[5]]);
+  });
+
+  it('should emit value incremented by step', async () =&gt; {
+    await component.setProps({ step: 10 });
+    await component.find('[aria-label=&quot;Decrement&quot;]').trigger('click'); // find+click the button
+    expect(component.emitted('input')).toEqual([[10]]);
+  });
+
+  it('should emit value decremented by step', async () =&gt; {
+    await component.setProps({ step: 10 });
+    await component.find('[aria-label=&quot;Increment&quot;]').trigger('click'); // find+click the button
+    expect(component.emitted('input')).toEqual([[-10]]);
+  });
+});
+</code></pre>
+<p><em>Source: <a href="https://gist.github.com/vdsabev/299ca73693fb5087e343e6a0e14e23af">gist.github.com/vdsabev/299ca73693fb5087e343e6a0e14e23af</a></em></p>
+<p>What&rsquo;s going on here? First, we select the DOM node we want to test using <a href="https://vue-test-utils.vuejs.org/api/wrapper/#find"><code>component.find</code></a>, then trigger the corresponding event.</p>
+<p>Remember the issues we had while refactoring our component code before? As expected, the first test would&rsquo;ve caught the incorrect argument of <code>setValue</code>, and the second and third tests would still be passing after removing the <code>step</code> prop from the template.</p>
+<p>This is also where we make use of the <code>aria-label</code> attributes, and because we needed to set those to select the elements in our unit tests, accessibility to QA is now a first-class citizen!</p>
+<p>You might still have some questions right about now.</p>
+<h3>🙋‍♂ Isn&rsquo;t this unnecessarily testing the framework?</h3>
+<p>We&rsquo;re testing the event bindings we wrote in the HTML template, not the internal workings of Vue. In fact these tests aren&rsquo;t even specific to Vue — we could just as well write our own <code>mount</code> function and re-implement the component in another framework while still keeping our tests unchanged.</p>
+<p>If we want to be able to trust our test suite, then all code that affects component behavior should be tested, even if it&rsquo;s &ldquo;just HTML&rdquo;, maybe even if it&rsquo;s CSS like <code>display: none</code> or <code>pointer-events: none</code> which can change how users interact with an element.</p>
+<p>And the earlier we can test it, the better — bugs don&rsquo;t have to be caught by a QA engineer after our code has already passed multiple developer reviews and gone through 60-minute cycles of CI/CD build and deploy.</p>
+<h3>🙋‍♀ Isn&rsquo;t this more work?</h3>
+<p>There are trade-offs to any approach. In this case the first test is 2 lines longer, and we do need to learn how to work with the DOM and think about what selectors to put in our code beforehand.</p>
+<p>What if instead of thinking about those extra few lines of code we were to consider all the hours saved by <em>not</em> having to fix subtle bugs, rewrite tests because of minor code refactors, or have back-and-forth discussions about selectors with our QA engineers?</p>
+<h3>🙋‍♀ Isn&rsquo;t this way of testing non-obvious?</h3>
+<p>This approach is far from niche — in fact testing the component&rsquo;s public interface and template logic is even mentioned in the <a href="https://vue-test-utils.vuejs.org/guides/#knowing-what-to-test">Vue Test Utils docs</a>. There are also libraries that specifically focus on this school of testing, the best know of which is the aptly named <a href="https://testing-library.com">Testing Library</a> utilities.</p>
+<p>Last but not least — keep in mind that QA engineers have been black-box testing for decades, and there&rsquo;s a lot we could learn from each other.</p>
+<h2>🏁 In summary</h2>
+<p>You do need a mental shift to write tests this way — it&rsquo;s not always easy or clear-cut, especially when using 3rd party components in your templates that don&rsquo;t have accessible selectors.</p>
+<p>I hope you&rsquo;ll find that once you start thinking about the <em>front side of the tapestry</em> you&rsquo;ll be noticing opportunities to write more reliable tests everywhere.</p>
+<hr />
+<p>Tags: <a href="https://medium.com/tag/vuejs">Vuejs</a>, <a href="https://medium.com/tag/testing">Testing</a>, <a href="https://medium.com/tag/software-development">Software Development</a>, <a href="https://medium.com/tag/vue-test-utils">Vue Test Utils</a>, <a href="https://medium.com/tag/quality-assurance">Quality Assurance</a></p>
+<p><em>Original article: <a href="https://medium.com/@vdsabev/writing-reliable-unit-tests-for-our-components-d29f3de69240">medium.com/@vdsabev/writing-reliable-unit-tests-for-our-components-d29f3de69240</a></em></p>
+			</main>
+		</div>
+		<script src="https://unpkg.com/prismjs@1.29.0/components/prism-core.min.js"></script>
+		<script src="https://unpkg.com/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+	</body>
+	</html>
+	
