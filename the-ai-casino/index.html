@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+	<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>The AI Casino</title>
+		<meta name="description" content="How variable rewards and prompt routing could be turning LLMs into digital slot machines" />
+		<meta property="og:url" content="https://vdsabev.github.io/the-ai-casino/" />
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content="The AI Casino" />
+		<meta property="og:description" content="How variable rewards and prompt routing could be turning LLMs into digital slot machines" />
+		<meta property="og:image" content="/assets/20260217110600.jpg" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content="https://vdsabev.github.io/the-ai-casino/" />
+		<meta name="twitter:title" content="The AI Casino" />
+		<meta name="twitter:description" content="How variable rewards and prompt routing could be turning LLMs into digital slot machines" />
+		<meta name="twitter:image" content="/assets/20260217110600.jpg" />
+		<link rel="stylesheet" href="https://unpkg.com/missing.css@1.2.0">
+		<link rel="stylesheet" href="https://unpkg.com/missing.css@1.2.0/dist/missing-prism.min.css">
+		
+	<style>
+	  :root {
+		color-scheme: light;
+		--bg: #fafafa;
+		--fg: #1a1a1a;
+		--box-bg: #f0f0f0;
+		--interactive-bg: #e0e0e0;
+		--accent: #0066cc;
+		--link-fg: #0066cc;
+		--muted-fg: #6c7280;
+	  }
+
+	  nav li + li {
+		margin-top: 0.5rem;
+	  }
+
+	  /* Force dark theme for code blocks regardless of page theme */
+	  pre, code {
+		--bad-fg: #f97583;
+		--ok-fg: #9ecbff;
+		--warn-fg: #ffab70;
+		--info-fg: #79c0ff;
+	  }
+	  
+	  pre {
+		background: #1e1e1e !important;
+		color: #e1e4e8 !important;
+		border-radius: 6px;
+		padding: 1em;
+	  }
+
+	  code {
+		background: #1e1e1e !important;
+		color: #e1e4e8 !important;
+		padding: 0.2em 0.4em;
+		border-radius: 3px;
+	  }
+
+	  pre code {
+		background: transparent !important;
+		padding: 0;
+	  }
+	</style>
+	
+	</head>
+	<body>
+		<div style="max-width: 1200px; margin: 0 auto; padding: 2rem 1rem; display: flex; gap: 2rem;">
+			<aside style="flex: 0 0 250px; position: sticky; top: 2rem; height: fit-content;">
+				<nav><h3>Posts</h3><ul><li><strong><a href="/the-ai-casino/">2026-02-17 The AI Casino</a></strong></li><li><a href="/the-spiritual-cost-of-the-nanny-state/">2026-02-07 The Spiritual Cost of the Nanny State</a></li><li><a href="/overtherapizing-men-s-mental-health/">2026-02-02 Overtherapizing Men's Mental Health</a></li><li><a href="/storytelling-with-ai-world-models/">2026-02-02 Storytelling with AI World Models</a></li><li><a href="/writing-reliable-unit-tests-for-our-components/">2020-11-08 Writing Reliable Unit Tests for Our Components</a></li></ul></nav>
+			</aside>
+			<main style="flex: 1; min-width: 0;">
+				<h1>The AI Casino</h1>
+				<p><img alt="" src="/assets/20260217110600.jpg" /></p>
+<h2>🎰 The Slot Machine Loop of LLMs</h2>
+<p>I recently stumbled upon a piece that got me thinking: <a href="https://pivot-to-ai.com/2025/06/05/generative-ai-runs-on-gambling-addiction-just-one-more-prompt-bro">Generative AI runs on gambling addiction: &ldquo;Just one more prompt, bro&rdquo;</a>.</p>
+<p>Purely hypothetically, if you were an AI provider who wanted to make your product not just useful, but truly addictive - how would you actually do it?</p>
+<h2>🪝 Engineering the Hook</h2>
+<p>To build a hook, you would look at the gambling industry. They perfected the science of variable payouts decades ago.</p>
+<blockquote>
+<p>The most powerful way to reinforce a behavior isn&rsquo;t to reward it every time, but to reward it <em>randomly</em>.</p>
+</blockquote>
+<p>In a casino, this is a slot machine. In AI, it&rsquo;s <strong>one-shotting</strong> a complex problem. You prompt a model ten times. Nine times it may give you nothing too special, or even broken code. But the tenth time? It may produce a piece of code so delightful and elegant that it gives you a huge hit of dopamine.</p>
+<p>You&rsquo;re hooked. And you&rsquo;ll spend the rest of the day chasing that high again.</p>
+<h2>🫥 The Routing Layer</h2>
+<p>If AI providers are slottifying their products, are they doing so intentionally, or is it just an emergent property of the tech?</p>
+<p>From an engineering perspective, every AI provider <em>most likely</em> has a prompt router. Running your top-of-the-line model for every &ldquo;Hello World&rdquo; request while massively subsidizing token costs with cheap subscriptions is financial suicide. You put a cache and a very cheap, lightweight model (a Flash or Lite variant) in front of every prompt.</p>
+<p>If the router thinks the prompt is easy, it sends it to the cheap model. If it looks complex - or if the user is a &ldquo;whale&rdquo; they want to impress - maybe it gets sent to the heavy hitter.</p>
+<p>What if that routing isn&rsquo;t just about cost? What if it&rsquo;s about retention? If a user hasn&rsquo;t had a &ldquo;win&rdquo; in a while, do you route their next coding prompt to your best and brightest model just to keep them in the game?</p>
+<h2>📈 Degradation or Deliberate Variance?</h2>
+<p>We&rsquo;ve all heard the complaints: &ldquo;Opus is getting dumber&rdquo; or &ldquo;Gemini used to be better at this.&rdquo; Usually, we chalk it up to manual alignment.</p>
+<p>Prompt routing offers an alternative explanation. If AI companies don&rsquo;t legally guarantee that a specific model name maps to a specific set of weights for every single token, they have a massive lever for cost-cutting and psychological manipulation.</p>
+<p>What if 1 out of 10 prompts gets the &ldquo;Pro&rdquo; treatment, and the other 9 get the &ldquo;Lite&rdquo; version with a &ldquo;Pro&rdquo; label on the UI? You get just enough brilliance to stick around, and just enough mediocrity to keep you prompting.</p>
+<h2>🤔 What about Benchmarks?</h2>
+<p>Wouldn&rsquo;t benchmarks catch such manipulation? Remember the Volkswagen emissions scandal? The car&rsquo;s software would detect when it was being tested and &ldquo;cheat&rdquo; by reducing emissions only during the test.</p>
+<p>Is it such a stretch to imagine an LLM router detecting a benchmark prompt (MMLU, HumanEval, etc.) and routing it to a specialized cluster, while average users get the &ldquo;distilled&rdquo; version?</p>
+<p>I&rsquo;m not claiming AI model providers are putting their thumb on the scale. But if they wanted to, there&rsquo;s little to prevent them from doing so for the random consumer.</p>
+<p>The countermeasure to manipulation however is not regulation - any regulation in that direction would probably be too heavy-handed. Rather, it&rsquo;s open-source models, which are now only a few months behind the state-of-the-art models.</p>
+<h2>💪 Hardware Sovereignty</h2>
+<p>The only way to know for sure what weights are processing your tokens is to host them yourself. But it&rsquo;s 2026, and with current supply chain crunches getting your hands on decent GPU and RAM is more and more cost-prohibitive.</p>
+<p>Maybe a few years from now the manufacturing will be so advanced and the tech so powerful and cheap that we&rsquo;ll have a Kimi K2.5-equivalent model running locally in our pocket. Until then, consider this: every time you hit &ldquo;Generate&rdquo; with a supposedly state-of-the-art model, you might be placing a bet.</p>
+<p>And in the long run, the house always wins.</p>
+			</main>
+		</div>
+		<script src="https://unpkg.com/prismjs@1.29.0/components/prism-core.min.js"></script>
+		<script src="https://unpkg.com/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+	</body>
+	</html>
+	
